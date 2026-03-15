@@ -17,6 +17,7 @@ const loadMoreBtn = document.querySelector('.load-more-btn');
 let currentQuery = '';
 let currentPage = 1;
 let totalHits = 0;
+const PER_PAGE = 15;
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -51,8 +52,15 @@ form.addEventListener('submit', async (event) => {
     } else {
       createGallery(data.hits);
       totalHits = data.totalHits;
-      if (totalHits > currentPage * 15) {
+      
+      if (totalHits > currentPage * PER_PAGE) {
         showLoadMoreButton();
+      } else {
+        iziToast.info({
+          title: 'Info',
+          message: "We're sorry, but you've reached the end of search results.",
+          position: 'topRight',
+        });
       }
     }
   } catch (error) {
@@ -68,8 +76,10 @@ form.addEventListener('submit', async (event) => {
 });
 
 loadMoreBtn.addEventListener('click', async () => {
-  currentPage += 1;
+  hideLoadMoreButton();
   showLoader();
+
+  currentPage += 1;
 
   try {
     const data = await getImagesByQuery(currentQuery, currentPage);
@@ -84,13 +94,14 @@ loadMoreBtn.addEventListener('click', async () => {
       });
     }
 
-    if (totalHits <= currentPage * 15) {
-      hideLoadMoreButton();
+    if (totalHits <= currentPage * PER_PAGE) {
       iziToast.info({
         title: 'Info',
         message: "We're sorry, but you've reached the end of search results.",
         position: 'topRight',
       });
+    } else {
+      showLoadMoreButton();
     }
   } catch (error) {
     console.error('Pixabay API error:', error);
@@ -99,6 +110,7 @@ loadMoreBtn.addEventListener('click', async () => {
       message: 'Something went wrong. Please try again later.',
       position: 'topRight',
     });
+    showLoadMoreButton();
   } finally {
     hideLoader();
   }
